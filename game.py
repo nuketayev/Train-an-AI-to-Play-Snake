@@ -24,7 +24,7 @@ BLUE2 = (0, 100, 255)
 BLACK = (0,0,0)
 
 BLOCK_SIZE = 20
-SPEED = 40
+SPEED = 100
 
 class SnakeGameAI:
 
@@ -51,6 +51,7 @@ class SnakeGameAI:
         self.food = None
         self._place_food()
         self.frame_iteration = 0
+        self.head_positions = [self.head]
 
 
     def _place_food(self):
@@ -72,7 +73,12 @@ class SnakeGameAI:
         # 2. move
         self._move(action) # update the head
         self.snake.insert(0, self.head)
-        
+
+        # Track head positions
+        self.head_positions.insert(0, self.head)
+        if len(self.head_positions) > (len(self.snake)+1):
+            self.head_positions.pop()
+
         # 3. check if game over
         reward = 0
         game_over = False
@@ -89,6 +95,14 @@ class SnakeGameAI:
         else:
             self.snake.pop()
         
+        # print(f"Here is snake head: {self.head} and here is its len: {len(self.snake)}")
+        
+        # if snake head position is same as len(snake)+1 steps before then -rewards
+
+        if self.head in self.head_positions[1:]:
+            print("Drunk snake!")
+            # reward = -1
+
         # 5. update ui and clock
         self._update_ui()
         self.clock.tick(SPEED)
@@ -104,6 +118,7 @@ class SnakeGameAI:
             return True
         # hits itself
         if pt in self.snake[1:]:
+            print("Head in snake")
             return True
 
         return False
@@ -118,7 +133,7 @@ class SnakeGameAI:
 
         pygame.draw.rect(self.display, RED, pygame.Rect(self.food.x, self.food.y, BLOCK_SIZE, BLOCK_SIZE))
 
-        text = font.render("Score: " + str(self.score), True, WHITE)
+        text = font.render("Current score: " + str(self.score), True, "Green")
         self.display.blit(text, [0, 0])
         pygame.display.flip()
 
