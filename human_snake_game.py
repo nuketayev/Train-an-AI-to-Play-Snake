@@ -68,11 +68,16 @@ class Game:
                       Point(self.snake_head.x,(self.snake_head.y - (BOX_SIZE * 2)))]
 
         self.score = 0
+        self.record = 0
         
         self.food = None
         self.spawn_food()
 
         self.restart_button = MyButton(self.display_width - 120, 10, 100, 40, "restart", font_button, "#800000", "red")
+
+        self.arrow_image = pygame.image.load("arrow.png")
+        self.arrow_image = pygame.transform.scale(self.arrow_image, (30, 30))
+        self.arrow_direction = "→"
 
     def reset(self):
         self.direction = Direction.DOWN
@@ -103,6 +108,9 @@ class Game:
                 if event.key == pygame.K_q:
                     pygame.quit()
                     quit()
+                if event.key ==pygame.K_r:
+                    self.reset()
+                    return False, self.score
                 if (event.key == pygame.K_UP or event.key == pygame.K_w) and self.direction != Direction.DOWN:
                     self.next_direction = Direction.UP
                 if (event.key == pygame.K_DOWN or event.key == pygame.K_s) and self.direction != Direction.UP:
@@ -134,6 +142,8 @@ class Game:
         
         if self.snake_head == self.food:
             self.score += 1
+            if self.record <= self.score:
+                self.record = self.score
             self.spawn_food()
         else:
             self.snake.pop()
@@ -161,22 +171,40 @@ class Game:
             return True
 
     def toward_food(self):
-        if (self.food.x + BOX_SIZE * 5) < self.snake_head.x and (self.food.y + BOX_SIZE * 5) < self.snake_head.y:
-            self.arrow = ("🡬")
-        elif (self.food.x - BOX_SIZE * 5) > self.snake_head.x and (self.food.y - BOX_SIZE * 5) > self.snake_head.y:
-            self.arrow = ("🡮")
-        elif (self.food.x - BOX_SIZE * 5) > self.snake_head.x and (self.food.y + BOX_SIZE * 5) < self.snake_head.y:
-            self.arrow = ("🡭")
-        elif (self.food.x + BOX_SIZE * 5) < self.snake_head.x and (self.food.y - BOX_SIZE * 5) > self.snake_head.y:
-            self.arrow = ("🡯")
-        elif (self.food.x + BOX_SIZE * 5) < self.snake_head.x:
-            self.arrow = ("🡨")
-        elif (self.food.x - BOX_SIZE * 5) > self.snake_head.x:
-            self.arrow = ("🡪")
-        elif (self.food.y + BOX_SIZE * 5) < self.snake_head.y:
-            self.arrow = ("🡩")
-        elif (self.food.y - BOX_SIZE * 5) > self.snake_head.y:
-            self.arrow = ("🡫")
+        if (self.food.x + BOX_SIZE * 3) < self.snake_head.x and (self.food.y - BOX_SIZE * 3) > self.snake_head.y:
+            self.arrow_direction = "↙"
+        elif (self.food.x - BOX_SIZE * 3) > self.snake_head.x and (self.food.y - BOX_SIZE * 3) > self.snake_head.y:
+            self.arrow_direction = "↘"
+        elif (self.food.x - BOX_SIZE * 3) > self.snake_head.x and (self.food.y + BOX_SIZE * 3) < self.snake_head.y:
+            self.arrow_direction = "↗"
+        elif (self.food.x + BOX_SIZE * 3) < self.snake_head.x and (self.food.y + BOX_SIZE * 3) < self.snake_head.y:
+            self.arrow_direction = "↖"
+        elif (self.food.x + BOX_SIZE * 3) < self.snake_head.x:
+            self.arrow_direction = "←"
+        elif (self.food.x - BOX_SIZE * 3) > self.snake_head.x:
+            self.arrow_direction = "→"
+        elif (self.food.y + BOX_SIZE * 3) < self.snake_head.y:
+            self.arrow_direction = "↑"
+        elif (self.food.y - BOX_SIZE * 3) > self.snake_head.y:
+            self.arrow_direction = "↓"
+
+    def rotate_arrow(self, direction):
+        if direction == "↙":
+            return pygame.transform.rotate(self.arrow_image, 225)
+        elif direction == "↘":
+            return pygame.transform.rotate(self.arrow_image, 315)
+        elif direction == "↗":
+            return pygame.transform.rotate(self.arrow_image, 45)
+        elif direction == "↖":
+            return pygame.transform.rotate(self.arrow_image, 135)
+        elif direction == "←":
+            return pygame.transform.rotate(self.arrow_image, 180)
+        elif direction == "→":
+            return pygame.transform.rotate(self.arrow_image, 0)
+        elif direction == "↑":
+            return pygame.transform.rotate(self.arrow_image, 90)
+        elif direction == "↓":
+            return pygame.transform.rotate(self.arrow_image, 270)
 
         
 
@@ -186,8 +214,12 @@ class Game:
         self.display.blit(text_score, [BOX_SIZE, BOX_SIZE])
         text_speed = font_score.render(f"Speed: {int(self.speed)}", True, "#4fc3f7")
         self.display.blit(text_speed, [200, BOX_SIZE])
-        text_speed = font_score.render(f"Food {self.arrow}", True, "#4fc3f7")
-        self.display.blit(text_speed, [400, BOX_SIZE])
+        text_arrow = font_score.render(f"Food", True, "#4fc3f7")
+        self.display.blit(text_arrow, [400, BOX_SIZE])
+        rotated_arrow = self.rotate_arrow(self.arrow_direction)
+        self.display.blit(rotated_arrow, (500, BOX_SIZE + 10))
+        text_speed = font_score.render(f"Record: {int(self.record)}", True, "#4fc3f7")
+        self.display.blit(text_speed, [600, BOX_SIZE])
         self.restart_button.draw(self.display)
 
         self.display.fill("BLACK", (0, INFO_ZONE_HEIGHT, self.display_width, self.display_hight))
