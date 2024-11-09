@@ -83,6 +83,8 @@ class Game:
         self.arrow_image = pygame.transform.scale(self.arrow_image, (30, 30))
         self.degree = 0
         self.paused = False
+        self.nowall_mode = False
+        self.nowall_mode_status = "OFF"
 
     def reset(self):
         self.direction = Direction.DOWN
@@ -118,6 +120,12 @@ class Game:
                     return False, self.score
                 if event.key == pygame.K_ESCAPE:
                     self.paused = not self.paused
+                if event.key == pygame.K_SPACE:
+                    self.nowall_mode = not self.nowall_mode
+                    if self.nowall_mode:
+                        self.nowall_mode_status = "ON"
+                    else:
+                        self.nowall_mode_status = "OFF"
                 if not self.paused:
                     if (event.key == pygame.K_UP or event.key == pygame.K_w) and self.direction != Direction.DOWN:
                         self.next_direction = Direction.UP
@@ -175,13 +183,16 @@ class Game:
         return gameIsOver, self.score
 
     def isCollition(self):
-        if self.snake_head.x < 0 or self.snake_head.x > (self.display_width - BOX_SIZE):
-            return True
-        if self.snake_head.y < INFO_ZONE_HEIGHT or self.snake_head.y > (self.display_hight - BOX_SIZE):
-            return True
-        
+        if not self.nowall_mode:
+            if self.snake_head.x < 0 or self.snake_head.x > (self.display_width - BOX_SIZE):
+                return True
+            if self.snake_head.y < INFO_ZONE_HEIGHT or self.snake_head.y > (self.display_hight - BOX_SIZE):
+                return True
+            
         if self.snake_head in self.snake[1:]:
+            print("Snake ate itself")
             return True
+        return False
 
     def draw_pause_menu(self):
         self.surface.fill((0,0,0,0))
@@ -232,7 +243,7 @@ class Game:
 
     def rotate_arrow(self, angle):
         rotated_image = pygame.transform.rotate(self.arrow_image, angle)
-        new_rect = rotated_image.get_rect(center=self.arrow_image.get_rect(topleft=(500, BOX_SIZE + 10)).center)
+        new_rect = rotated_image.get_rect(center=self.arrow_image.get_rect(topleft=((self.display_width / 2) - (self.arrow_image.get_width() / 2), BOX_SIZE-5)).center)
         return rotated_image, new_rect
         # if direction == "↙":
         #     return pygame.transform.rotate(self.arrow_image, 225)
@@ -257,15 +268,16 @@ class Game:
         self.display.fill("#202020", (0, 0, self.display_width, INFO_ZONE_HEIGHT))
         text_score = font_score.render("Score: " + str(self.score), True, "GOLD")
         self.display.blit(text_score, [BOX_SIZE, BOX_SIZE])
-        text_keys = font_info.render("Press Q - quit   |   R - restart   |   ESC - pause   |   WASD/Arrows - move", True, "WHITE")
+        text_keys = font_info.render("Press Q - quit   |   R - restart   |   ESC - pause   |   WASD/Arrows - move   |   SPACE - no wall mode",
+                                      True, "WHITE")
         self.display.blit(text_keys, [BOX_SIZE, BOX_SIZE*2.8])
-        text_speed = font_score.render(f"Speed: {int(self.speed)} km/h", True, "#4fc3f7")
-        self.display.blit(text_speed, [160, BOX_SIZE])
-        text_arrow = font_score.render(f"Food", True, "#4fc3f7")
-        self.display.blit(text_arrow, [400, BOX_SIZE])
+        text_speed = font_info.render(f"Speed: {int(self.speed)} units/s", True, "white")
+        self.display.blit(text_speed, [650, BOX_SIZE-5])
+        text_mode = font_info.render(f"No wall mode: {self.nowall_mode_status}", True, "white")
+        self.display.blit(text_mode, [650, BOX_SIZE*2])
         rotated_arrow, new_rect = self.rotate_arrow(self.degree)
-        text_speed = font_score.render(f"Record: {int(self.record)}", True, "#4fc3f7")
-        self.display.blit(text_speed, [600, BOX_SIZE])
+        text_record = font_score.render(f"Record: {int(self.record)}", True, "#4fc3f7")
+        self.display.blit(text_record, [160, BOX_SIZE])
         self.restart_button.draw(self.display)
         self.pause_button.draw(self.display)
 
@@ -275,22 +287,41 @@ class Game:
             pygame.draw.rect(self.display, "GREEN", pygame.Rect(pt.x+4, pt.y+4, 12, 12))
         pygame.draw.rect(self.display, "RED", pygame.Rect(self.food.x, self.food.y, BOX_SIZE, BOX_SIZE))
         pygame.draw.rect(self.display, "GREEN", pygame.Rect(self.food.x+(BOX_SIZE/2), self.food.y, BOX_SIZE/3, BOX_SIZE/3))
-        pygame.draw.circle(self.display, "#660000", [new_rect.centerx, new_rect.centery], 20, 0)
+        pygame.draw.circle(self.display, "white", [new_rect.centerx, new_rect.centery], 20, 0)
         self.display.blit(rotated_arrow, new_rect.topleft)
         pygame.display.flip()
 
     def move(self):
         x = self.snake_head.x
         y = self.snake_head.y
+        if self.nowall_mode:
+            if self.direction == Direction.RIGHT and self.snake_head.x >= self.display_width - BOX_SIZE:
+                x = 0
+            elif self.direction == Direction.LEFT and self.snake_head.x < 0:
+                x = self.display_width - BOX_SIZE
+            elif self.direction == Direction.UP and self.snake_head.y <= INFO_ZONE_HEIGHT:
+                y = self.display_hight - BOX_SIZE
+            elif self.direction == Direction.DOWN and self.snake_head.y >= self.display_hight - BOX_SIZE:
+                y = INFO_ZONE_HEIGHT
+            else:
+                if self.direction == Direction.UP:
+                    y -= BOX_SIZE
+                if self.direction == Direction.DOWN:
+                    y += BOX_SIZE
+                if self.direction == Direction.RIGHT:
+                    x += BOX_SIZE
+                if self.direction == Direction.LEFT:
+                    x -= BOX_SIZE
+        else:
+            if self.direction == Direction.UP:
+                y -= BOX_SIZE
+            if self.direction == Direction.DOWN:
+                y += BOX_SIZE
+            if self.direction == Direction.RIGHT:
+                x += BOX_SIZE
+            if self.direction == Direction.LEFT:
+                x -= BOX_SIZE
 
-        if self.direction == Direction.UP:
-            y -= BOX_SIZE
-        if self.direction == Direction.DOWN:
-            y += BOX_SIZE
-        if self.direction == Direction.RIGHT:
-            x += BOX_SIZE
-        if self.direction == Direction.LEFT:
-            x -= BOX_SIZE
         self.snake_head = Point(x, y)
 
     def countdown(self):
