@@ -2,6 +2,7 @@ import pygame
 from collections import namedtuple
 from enum import Enum
 import random
+import math
 import time
 
 pygame.init()
@@ -11,6 +12,7 @@ Point = namedtuple("Point","x, y")
 font_score = pygame.font.SysFont('arial', 30)
 font_restart = pygame.font.SysFont('arial', 80)
 font_button = pygame.font.SysFont('arial', 30)
+font_info = pygame.font.SysFont('arial', 15)
 
 class Direction(Enum):
     LEFT = 1
@@ -59,6 +61,7 @@ class Game:
         self.next_direction = self.direction
 
         self.display = pygame.display.set_mode((self.display_width, self.display_hight))
+        self.surface = pygame.Surface((self.display_width, self.display_hight), pygame.SRCALPHA)
         pygame.display.set_caption('Snake Game')
         self.clock = pygame.time.Clock()
 
@@ -73,11 +76,13 @@ class Game:
         self.food = None
         self.spawn_food()
 
-        self.restart_button = MyButton(self.display_width - 120, 10, 100, 40, "restart", font_button, "#800000", "red")
+        self.restart_button = MyButton(self.display_width - 120, 10, 100, 40, "restart", font_button, "#660000", "red")
+        self.pause_button = MyButton(self.display_width - 230, 10, 100, 40, "pause", font_button, "#4fc3f7", "red")
 
         self.arrow_image = pygame.image.load("arrow.png")
         self.arrow_image = pygame.transform.scale(self.arrow_image, (30, 30))
-        self.arrow_direction = "→"
+        self.degree = 0
+        self.paused = False
 
     def reset(self):
         self.direction = Direction.DOWN
@@ -108,26 +113,34 @@ class Game:
                 if event.key == pygame.K_q:
                     pygame.quit()
                     quit()
-                if event.key ==pygame.K_r:
+                if event.key == pygame.K_r:
                     self.reset()
                     return False, self.score
-                if (event.key == pygame.K_UP or event.key == pygame.K_w) and self.direction != Direction.DOWN:
-                    self.next_direction = Direction.UP
-                if (event.key == pygame.K_DOWN or event.key == pygame.K_s) and self.direction != Direction.UP:
-                    self.next_direction = Direction.DOWN
-                if (event.key == pygame.K_RIGHT or event.key == pygame.K_d) and self.direction != Direction.LEFT:
-                    self.next_direction = Direction.RIGHT
-                if (event.key == pygame.K_LEFT or event.key == pygame.K_a) and self.direction != Direction.RIGHT:
-                    self.next_direction = Direction.LEFT
-
+                if event.key == pygame.K_ESCAPE:
+                    self.paused = not self.paused
+                if not self.paused:
+                    if (event.key == pygame.K_UP or event.key == pygame.K_w) and self.direction != Direction.DOWN:
+                        self.next_direction = Direction.UP
+                    if (event.key == pygame.K_DOWN or event.key == pygame.K_s) and self.direction != Direction.UP:
+                        self.next_direction = Direction.DOWN
+                    if (event.key == pygame.K_RIGHT or event.key == pygame.K_d) and self.direction != Direction.LEFT:
+                        self.next_direction = Direction.RIGHT
+                    if (event.key == pygame.K_LEFT or event.key == pygame.K_a) and self.direction != Direction.RIGHT:
+                        self.next_direction = Direction.LEFT
             if self.restart_button.is_clicked(event):
                 self.reset()
                 return False, self.score
+            if self.pause_button.is_clicked(event):
+                self.paused = not self.paused
+
+        if self.paused:
+            self.draw_pause_menu()
+            return False, self.score
 
         if (self.next_direction == Direction.UP and self.direction != Direction.DOWN) or \
-           (self.next_direction == Direction.DOWN and self.direction != Direction.UP) or \
-           (self.next_direction == Direction.LEFT and self.direction != Direction.RIGHT) or \
-           (self.next_direction == Direction.RIGHT and self.direction != Direction.LEFT):
+        (self.next_direction == Direction.DOWN and self.direction != Direction.UP) or \
+        (self.next_direction == Direction.LEFT and self.direction != Direction.RIGHT) or \
+        (self.next_direction == Direction.RIGHT and self.direction != Direction.LEFT):
             self.direction = self.next_direction
                 
         self.move()
@@ -170,41 +183,73 @@ class Game:
         if self.snake_head in self.snake[1:]:
             return True
 
-    def toward_food(self):
-        if (self.food.x + BOX_SIZE * 3) < self.snake_head.x and (self.food.y - BOX_SIZE * 3) > self.snake_head.y:
-            self.arrow_direction = "↙"
-        elif (self.food.x - BOX_SIZE * 3) > self.snake_head.x and (self.food.y - BOX_SIZE * 3) > self.snake_head.y:
-            self.arrow_direction = "↘"
-        elif (self.food.x - BOX_SIZE * 3) > self.snake_head.x and (self.food.y + BOX_SIZE * 3) < self.snake_head.y:
-            self.arrow_direction = "↗"
-        elif (self.food.x + BOX_SIZE * 3) < self.snake_head.x and (self.food.y + BOX_SIZE * 3) < self.snake_head.y:
-            self.arrow_direction = "↖"
-        elif (self.food.x + BOX_SIZE * 3) < self.snake_head.x:
-            self.arrow_direction = "←"
-        elif (self.food.x - BOX_SIZE * 3) > self.snake_head.x:
-            self.arrow_direction = "→"
-        elif (self.food.y + BOX_SIZE * 3) < self.snake_head.y:
-            self.arrow_direction = "↑"
-        elif (self.food.y - BOX_SIZE * 3) > self.snake_head.y:
-            self.arrow_direction = "↓"
+    def draw_pause_menu(self):
+        self.surface.fill((0,0,0,0))
+        pygame.draw.rect(self.surface, (32, 32, 32, 5), [0, 0, self.display_width, self.display_hight])
+        self.display.blit(self.surface, (0, 0))
+        pause_text = font_restart.render("PAUSED", True, "WHITE")
+        self.display.blit(pause_text, [self.display_width // 2 - pause_text.get_width() // 2, self.display_hight // 2 - pause_text.get_height() // 2 - 40])
+        
+        resume_text = font_score.render("Press ESC to resume", True, "WHITE")
+        self.display.blit(resume_text, [self.display_width // 2 - resume_text.get_width() // 2, self.display_hight // 2 - resume_text.get_height() // 2 + 40])
+    
+        pygame.display.flip()
 
-    def rotate_arrow(self, direction):
-        if direction == "↙":
-            return pygame.transform.rotate(self.arrow_image, 225)
-        elif direction == "↘":
-            return pygame.transform.rotate(self.arrow_image, 315)
-        elif direction == "↗":
-            return pygame.transform.rotate(self.arrow_image, 45)
-        elif direction == "↖":
-            return pygame.transform.rotate(self.arrow_image, 135)
-        elif direction == "←":
-            return pygame.transform.rotate(self.arrow_image, 180)
-        elif direction == "→":
-            return pygame.transform.rotate(self.arrow_image, 0)
-        elif direction == "↑":
-            return pygame.transform.rotate(self.arrow_image, 90)
-        elif direction == "↓":
-            return pygame.transform.rotate(self.arrow_image, 270)
+    def toward_food(self):
+        x = abs(self.food.x - self.snake_head.x)
+        y = abs(self.food.y - self.snake_head.y)
+        right_angle = 90
+        
+        if self.food.x >= self.snake_head.x and self.food.y <= self.snake_head.y:
+            radians = math.atan2(y, x)
+            self.degree = math.degrees(radians)
+        elif self.food.x <= self.snake_head.x and self.food.y <= self.snake_head.y:
+            radians = math.atan2(x, y)
+            self.degree = (math.degrees(radians) + right_angle)
+        elif self.food.x <= self.snake_head.x and self.food.y >= self.snake_head.y:
+            radians = math.atan2(y, x)
+            self.degree = (math.degrees(radians) + (right_angle * 2))
+        elif self.food.x >= self.snake_head.x and self.food.y >= self.snake_head.y:
+            radians = math.atan2(x, y)
+            self.degree = (math.degrees(radians) + (right_angle * 3))
+
+        # if (self.food.x + BOX_SIZE * 3) < self.snake_head.x and (self.food.y - BOX_SIZE * 3) > self.snake_head.y:
+        #     self.arrow_direction = "↙"
+        # elif (self.food.x - BOX_SIZE * 3) > self.snake_head.x and (self.food.y - BOX_SIZE * 3) > self.snake_head.y:
+        #     self.arrow_direction = "↘"
+        # elif (self.food.x - BOX_SIZE * 3) > self.snake_head.x and (self.food.y + BOX_SIZE * 3) < self.snake_head.y:
+        #     self.arrow_direction = "↗"
+        # elif (self.food.x + BOX_SIZE * 3) < self.snake_head.x and (self.food.y + BOX_SIZE * 3) < self.snake_head.y:
+        #     self.arrow_direction = "↖"
+        # elif (self.food.x + BOX_SIZE * 3) < self.snake_head.x:
+        #     self.arrow_direction = "←"
+        # elif (self.food.x - BOX_SIZE * 3) > self.snake_head.x:
+        #     self.arrow_direction = "→"
+        # elif (self.food.y + BOX_SIZE * 3) < self.snake_head.y:
+        #     self.arrow_direction = "↑"
+        # elif (self.food.y - BOX_SIZE * 3) > self.snake_head.y:
+        #     self.arrow_direction = "↓"
+
+    def rotate_arrow(self, angle):
+        rotated_image = pygame.transform.rotate(self.arrow_image, angle)
+        new_rect = rotated_image.get_rect(center=self.arrow_image.get_rect(topleft=(500, BOX_SIZE + 10)).center)
+        return rotated_image, new_rect
+        # if direction == "↙":
+        #     return pygame.transform.rotate(self.arrow_image, 225)
+        # elif direction == "↘":
+        #     return pygame.transform.rotate(self.arrow_image, 315)
+        # elif direction == "↗":
+        #     return pygame.transform.rotate(self.arrow_image, 45)
+        # elif direction == "↖":
+        #     return pygame.transform.rotate(self.arrow_image, 135)
+        # elif direction == "←":
+        #     return pygame.transform.rotate(self.arrow_image, 180)
+        # elif direction == "→":
+        #     return pygame.transform.rotate(self.arrow_image, 0)
+        # elif direction == "↑":
+        #     return pygame.transform.rotate(self.arrow_image, 90)
+        # elif direction == "↓":
+        #     return pygame.transform.rotate(self.arrow_image, 270)
 
         
 
@@ -212,22 +257,26 @@ class Game:
         self.display.fill("#202020", (0, 0, self.display_width, INFO_ZONE_HEIGHT))
         text_score = font_score.render("Score: " + str(self.score), True, "GOLD")
         self.display.blit(text_score, [BOX_SIZE, BOX_SIZE])
-        text_speed = font_score.render(f"Speed: {int(self.speed)}", True, "#4fc3f7")
-        self.display.blit(text_speed, [200, BOX_SIZE])
+        text_keys = font_info.render("Press Q - quit   |   R - restart   |   ESC - pause   |   WASD/Arrows - move", True, "WHITE")
+        self.display.blit(text_keys, [BOX_SIZE, BOX_SIZE*2.8])
+        text_speed = font_score.render(f"Speed: {int(self.speed)} km/h", True, "#4fc3f7")
+        self.display.blit(text_speed, [160, BOX_SIZE])
         text_arrow = font_score.render(f"Food", True, "#4fc3f7")
         self.display.blit(text_arrow, [400, BOX_SIZE])
-        rotated_arrow = self.rotate_arrow(self.arrow_direction)
-        self.display.blit(rotated_arrow, (500, BOX_SIZE + 10))
+        rotated_arrow, new_rect = self.rotate_arrow(self.degree)
         text_speed = font_score.render(f"Record: {int(self.record)}", True, "#4fc3f7")
         self.display.blit(text_speed, [600, BOX_SIZE])
         self.restart_button.draw(self.display)
+        self.pause_button.draw(self.display)
 
-        self.display.fill("BLACK", (0, INFO_ZONE_HEIGHT, self.display_width, self.display_hight))
+        self.display.fill("black", (0, INFO_ZONE_HEIGHT, self.display_width, self.display_hight))
         for pt in self.snake:
             pygame.draw.rect(self.display, "BLUE", pygame.Rect(pt.x, pt.y, BOX_SIZE, BOX_SIZE))
             pygame.draw.rect(self.display, "GREEN", pygame.Rect(pt.x+4, pt.y+4, 12, 12))
         pygame.draw.rect(self.display, "RED", pygame.Rect(self.food.x, self.food.y, BOX_SIZE, BOX_SIZE))
         pygame.draw.rect(self.display, "GREEN", pygame.Rect(self.food.x+(BOX_SIZE/2), self.food.y, BOX_SIZE/3, BOX_SIZE/3))
+        pygame.draw.circle(self.display, "#660000", [new_rect.centerx, new_rect.centery], 20, 0)
+        self.display.blit(rotated_arrow, new_rect.topleft)
         pygame.display.flip()
 
     def move(self):
@@ -247,8 +296,13 @@ class Game:
     def countdown(self):
         for i in range(3, 0, -1):
             self.display.fill("BLACK")
-            text = font_restart.render(f"Restarting in {i}", True, "WHITE")
-            self.display.blit(text, [self.display_width // 2 - text.get_width() // 2, self.display_hight // 2 - text.get_height() // 2])
+
+            game_over_text = font_restart.render("GAME OVER", True, "RED")
+            self.display.blit(game_over_text, [self.display_width // 2 - game_over_text.get_width() // 2, self.display_hight // 2 - game_over_text.get_height() // 2 - 40])
+            
+            countdown_text = font_score.render(f"restart in {i}", True, "WHITE")
+            self.display.blit(countdown_text, [self.display_width // 2 - countdown_text.get_width() // 2, self.display_hight // 2 - countdown_text.get_height() // 2 + 40])
+            
             pygame.display.flip()
             time.sleep(0.5)
         self.reset()
