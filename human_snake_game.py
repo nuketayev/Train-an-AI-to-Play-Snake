@@ -61,6 +61,8 @@ class Game:
         self.next_direction = self.direction
 
         self.display = pygame.display.set_mode((self.display_width, self.display_hight))
+        self.background_image = pygame.image.load('background.jpg')
+        self.background_image = pygame.transform.scale(self.background_image, (DWIDTH, DHEIGHT))
         self.surface = pygame.Surface((self.display_width, self.display_hight), pygame.SRCALPHA)
         pygame.display.set_caption('Snake Game')
         self.clock = pygame.time.Clock()
@@ -261,10 +263,9 @@ class Game:
         #     return pygame.transform.rotate(self.arrow_image, 90)
         # elif direction == "↓":
         #     return pygame.transform.rotate(self.arrow_image, 270)
-
-        
-
+     
     def update_ui(self):
+        self.display.blit(self.background_image, (0, 0))
         self.display.fill("#202020", (0, 0, self.display_width, INFO_ZONE_HEIGHT))
         text_score = font_score.render("Score: " + str(self.score), True, "GOLD")
         self.display.blit(text_score, [BOX_SIZE, BOX_SIZE])
@@ -281,7 +282,7 @@ class Game:
         self.restart_button.draw(self.display)
         self.pause_button.draw(self.display)
 
-        self.display.fill("black", (0, INFO_ZONE_HEIGHT, self.display_width, self.display_hight))
+        
         for pt in self.snake:
             pygame.draw.rect(self.display, "BLUE", pygame.Rect(pt.x, pt.y, BOX_SIZE, BOX_SIZE))
             pygame.draw.rect(self.display, "GREEN", pygame.Rect(pt.x+4, pt.y+4, 12, 12))
