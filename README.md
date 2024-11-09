@@ -29,7 +29,7 @@ A fun twist on the classic Snake Game! Play it yourself or watch an AI agent lea
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/snake-game-ai.git
+   git clone https://github.com/nuketayev/Train-an-AI-to-Play-Snake.git
    cd snake-game-ai
    ```
 2. **Install dependencies:**
