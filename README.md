@@ -53,7 +53,7 @@ A fun twist on the classic Snake Game! Play it yourself or watch an AI agent lea
 
 ## 🧠 Neural Network
 
-A simple feedforward network with one hidden layer, optimized with Deep Q-Learning:
+A simple feedforward network with one hidden layer of 256 units, optimized with Deep Q-Learning:
 1. **Experience Collection**: Collects state-action-reward experiences.
 2. **Replay Memory**: Stores experiences for efficient training.
 3. **Training Loop**: Samples mini-batches from memory to train the model.
@@ -63,12 +63,6 @@ A simple feedforward network with one hidden layer, optimized with Deep Q-Learni
 ## 🤝 Contributing
 
 Contributions are welcome! Feel free to open an issue or submit a pull request for any improvements or bug fixes.
-
----
-
-## 📜 License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ---
 
