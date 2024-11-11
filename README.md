@@ -11,6 +11,10 @@ A fun twist on the classic Snake Game! Play it yourself or watch an AI agent lea
 - **🤖 AI Mode**: Watch the AI learn and play autonomously with Deep Q-Learning.
 - **📊 Training Visualization**: Real-time plot of training stats like scores and mean scores.
 - **⏩ Adjustable Game Speed**: Speed up or slow down the game during AI training.
+- **➡️ Directional Arrow for Food:**: In human control mode, an arrow appears at the top of the screen, pointing toward the food using basic trigonometric calculations.
+Implementing a guide arrow like this in a game turned out to be surprisingly straightforward!
+Here’s a quick overview of the approach used in the game: All that's needed are the (x, y) coordinates of the player’s current position (in this case, the snake's head) and the coordinates of the target object (the food).
+![alt text](https://github.com/nuketayev/Train-an-AI-to-Play-Snake/16.png "map")
 
 ---
 
