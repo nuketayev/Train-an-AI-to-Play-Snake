@@ -16,6 +16,8 @@ Implementing a guide arrow like this in a game turned out to be surprisingly str
 Here’s a quick overview of the approach used in the game: All that's needed are the (x, y) coordinates of the player’s current position (in this case, the snake's head) and the coordinates of the target object (the food).
 ![alt text](https://github.com/nuketayev/Train-an-AI-to-Play-Snake/blob/main/16.png "map")
 
+The arrow is an image, and by default, it points to the right. By calculating the angle, we simply rotate the image so it points directly at the food.
+
 ---
 
 ## 🗂️ Project Structure
