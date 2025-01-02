@@ -1,4 +1,3 @@
-
 # 🐍 Snake Game AI 🎮
 
 A fun twist on the classic Snake Game! Play it yourself or watch an AI agent learn and play autonomously using **Deep Q-Learning**. Built with **Python** and **Pygame** for the game, and **PyTorch** for the neural network and training.
@@ -42,6 +41,24 @@ The arrow is an image, and by default, it points to the right. By calculating th
    ```bash
    pip install -r "requirements"
    ```
+
+---
+
+## 🚀 Launching the Game
+
+To start the game, run the `start_game.py` script. This will open a menu where you can select between Human Mode and AI Mode.
+
+```bash
+python start_game.py
+```
+
+### **Human Mode**
+- Select **"Play Game"** in the main menu.
+- **Controls**: Arrow keys or WASD to move, `R` to restart, `ESC` to pause, `SPACE` for no-wall mode.
+
+### **AI Mode**
+- Select **"Train AI"** in the main menu.
+- **Controls**: `W`/UP to increase speed, `S`/DOWN to decrease speed, `R` to reset speed, `Q` to quit.
 
 ---
 
