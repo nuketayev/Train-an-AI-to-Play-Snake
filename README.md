@@ -52,14 +52,6 @@ To start the game, run the `start_game.py` script. This will open a menu where y
 python start_game.py
 ```
 
-### **Human Mode**
-- Select **"Play Game"** in the main menu.
-- **Controls**: Arrow keys or WASD to move, `R` to restart, `ESC` to pause, `SPACE` for no-wall mode.
-
-### **AI Mode**
-- Select **"Train AI"** in the main menu.
-- **Controls**: `W`/UP to increase speed, `S`/DOWN to decrease speed, `R` to reset speed, `Q` to quit.
-
 ---
 
 ## 🎮 Usage
